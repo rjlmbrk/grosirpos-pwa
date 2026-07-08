@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id       BigInt   @id @default(autoincrement())
+  nama     String   @db.VarChar(100)
+  username String   @unique @db.VarChar(50)
+  password String   @db.VarChar(255)
+  role     String   @default("admin") @db.VarChar(10)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  transactions Transaction[]
+
+  @@map("users")
+}
+
+model Product {
+  id         BigInt        @id @default(autoincrement())
+  kodeBarang String        @map("kode_barang") @db.VarChar(100)
+  namaBarang String        @map("nama_barang") @db.VarChar(150)
+  kategori   String        @db.VarChar(100)
+  isActive   Boolean        @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  units            ProductUnit[]
+  transactionItems TransactionItem[]
+
+  @@index([namaBarang], name: "idx_product_name")
+  @@index([kodeBarang], name: "idx_product_kode")
+  @@index([createdAt], name: "idx_product_created")
+  @@map("products")
+}
+
+model ProductUnit {
+  id         BigInt   @id @default(autoincrement())
+  productId  BigInt   @map("product_id")
+  namaSatuan String   @map("nama_satuan") @db.VarChar(50)
+  hargaJual  Decimal  @map("harga_jual") @db.Decimal(15, 2)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  product          Product           @relation(fields: [productId], references: [id])
+  transactionItems TransactionItem[]
+
+  @@map("product_units")
+}
+
+model Transaction {
+  id               BigInt   @id @default(autoincrement())
+  nomorTransaksi   String   @map("nomor_transaksi") @db.VarChar(30)
+  tanggal          DateTime
+  total            Decimal  @db.Decimal(15, 2)
+  bayar            Decimal  @db.Decimal(15, 2)
+  kembalian        Decimal  @db.Decimal(15, 2)
+  userId           BigInt   @map("user_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user  User              @relation(fields: [userId], references: [id])
+  items TransactionItem[]
+
+  @@index([nomorTransaksi], name: "idx_transaction_number")
+  @@index([tanggal], name: "idx_transaction_date")
+  @@map("transactions")
+}
+
+model TransactionItem {
+  id             BigInt  @id @default(autoincrement())
+  transactionId  BigInt  @map("transaction_id")
+  productId      BigInt  @map("product_id")
+  productUnitId  BigInt  @map("product_unit_id")
+  qty            Decimal @db.Decimal(10, 2)
+  harga          Decimal @db.Decimal(15, 2)
+  subtotal       Decimal @db.Decimal(15, 2)
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  product     Product     @relation(fields: [productId], references: [id])
+  productUnit ProductUnit @relation(fields: [productUnitId], references: [id])
+
+  @@map("transaction_items")
+}
