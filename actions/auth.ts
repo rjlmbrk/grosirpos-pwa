@@ -46,8 +46,9 @@ export async function login(_prevState: unknown, formData: FormData) {
       maxAge: 60 * 60 * 24,
       path: "/",
     });
-  } catch {
-    return { error: "Terjadi kesalahan server" };
+  } catch (e) {
+    console.error("Login error:", e);
+    return { error: e instanceof Error ? e.message : "Terjadi kesalahan server" };
   }
 
   redirect("/dashboard");

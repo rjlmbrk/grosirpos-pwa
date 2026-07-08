@@ -5,7 +5,6 @@ function createTiDBConfig(urlString: string) {
   const url = new URL(urlString);
   const params = Object.fromEntries(url.searchParams.entries());
 
-  // Remove unsupported mariadb URL params (like ssl-mode)
   const { "ssl-mode": _, ...rest } = params;
 
   return {
@@ -20,11 +19,23 @@ function createTiDBConfig(urlString: string) {
   };
 }
 
-const adapter = new PrismaMariaDb(createTiDBConfig(process.env.DATABASE_URL!));
+function createAdapter() {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error("DATABASE_URL environment variable is not set");
+  }
+  return new PrismaMariaDb(createTiDBConfig(url));
+}
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
+  adapter: ReturnType<typeof createAdapter> | undefined;
 };
+
+const adapter = globalForPrisma.adapter ?? createAdapter();
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.adapter = adapter;
+}
 
 export const prisma =
   globalForPrisma.prisma ?? new PrismaClient({ adapter });
