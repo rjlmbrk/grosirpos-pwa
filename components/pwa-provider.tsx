@@ -6,11 +6,13 @@ import { Toaster, toast } from "sonner";
 interface InstallPromptContext {
   deferredPrompt: BeforeInstallPromptEvent | null;
   showInstall: boolean;
+  isStandalone: boolean;
 }
 
 const InstallPromptCtx = createContext<InstallPromptContext>({
   deferredPrompt: null,
   showInstall: false,
+  isStandalone: true,
 });
 
 export function useInstallPrompt() {
@@ -26,6 +28,7 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
   const [isOnline, setIsOnline] = useState(true);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstall, setShowInstall] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(true);
 
   const showOffline = useCallback(() => {
     toast.warning("Koneksi terputus", {
@@ -77,8 +80,14 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
       setDeferredPrompt(null);
     });
 
+    const mq = window.matchMedia("(display-mode: standalone)");
+    setIsStandalone(mq.matches);
+    const handleDisplayMode = (e: MediaQueryListEvent) => setIsStandalone(e.matches);
+    mq.addEventListener("change", handleDisplayMode);
+
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstall as EventListener);
+      mq.removeEventListener("change", handleDisplayMode);
     };
   }, []);
 
@@ -112,7 +121,7 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <InstallPromptCtx.Provider value={{ deferredPrompt, showInstall }}>
+    <InstallPromptCtx.Provider value={{ deferredPrompt, showInstall, isStandalone }}>
       {children}
       <Toaster position="top-center" richColors />
     </InstallPromptCtx.Provider>

@@ -6,6 +6,31 @@ import { prisma } from "@/lib/prisma";
 import { productSchema } from "@/schemas";
 import { getSession } from "@/lib/auth";
 
+export async function generateKodeBarang() {
+  const session = await getSession();
+  if (!session) return "";
+
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  const prefix = `BRG-${yyyy}${mm}${dd}-`;
+
+  const lastProduct = await prisma.product.findFirst({
+    where: { kodeBarang: { startsWith: prefix } },
+    orderBy: { kodeBarang: "desc" },
+    select: { kodeBarang: true },
+  });
+
+  let next = 1;
+  if (lastProduct) {
+    const lastNumber = parseInt(lastProduct.kodeBarang.slice(-4), 10);
+    next = lastNumber + 1;
+  }
+
+  return `${prefix}${String(next).padStart(4, "0")}`;
+}
+
 export async function getProducts(search?: string, page = 1) {
   const session = await getSession();
   if (!session) redirect("/login");
@@ -24,7 +49,7 @@ export async function getProducts(search?: string, page = 1) {
       WHERE MATCH(p.nama_barang) AGAINST(? IN BOOLEAN MODE)
         OR p.kode_barang LIKE ?
       GROUP BY p.id
-      ORDER BY p.created_at DESC
+      ORDER BY p.kode_barang ASC
       LIMIT ? OFFSET ?`,
       `${search}*`,
       `%${search}%`,
@@ -61,7 +86,7 @@ export async function getProducts(search?: string, page = 1) {
       skip,
       take,
       include: { units: true },
-      orderBy: { createdAt: "desc" },
+      orderBy: { kodeBarang: "asc" },
     }),
     prisma.product.count(),
   ]);
@@ -226,7 +251,7 @@ export async function searchProducts(search?: string) {
       where: { isActive: true },
       include: { units: true },
       take: 20,
-      orderBy: { createdAt: "desc" },
+      orderBy: { kodeBarang: "asc" },
     });
     return products.map((p) => ({
       id: Number(p.id),
@@ -252,7 +277,7 @@ export async function searchProducts(search?: string) {
       AND (MATCH(p.nama_barang) AGAINST(? IN BOOLEAN MODE)
         OR p.kode_barang LIKE ?)
     GROUP BY p.id
-    ORDER BY p.created_at DESC
+    ORDER BY p.kode_barang ASC
     LIMIT 20`,
     `${search}*`,
     `%${search}%`,

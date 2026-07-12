@@ -84,8 +84,8 @@ export function CashierClient() {
   } | null>(null);
 
   useEffect(() => {
-    searchRef.current?.focus();
     loadProducts("");
+    searchRef.current?.blur();
   }, []);
 
   useEffect(() => {

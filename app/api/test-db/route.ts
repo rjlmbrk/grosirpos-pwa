@@ -6,9 +6,9 @@ export async function GET() {
     const users = await prisma.user.findMany({ take: 1 });
     return NextResponse.json({
       ok: true,
-      count: users.length,
+      usersCount: users.length,
       user: users.length > 0
-        ? { id: users[0].id, username: users[0].username }
+        ? { id: String(users[0].id), username: users[0].username }
         : null,
     });
   } catch (e) {

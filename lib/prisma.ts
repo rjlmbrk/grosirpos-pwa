@@ -13,7 +13,11 @@ function createTiDBConfig(urlString: string) {
     user: decodeURIComponent(url.username),
     password: decodeURIComponent(url.password),
     database: url.pathname.replace(/^\//, "") || undefined,
-    ssl: url.searchParams.has("ssl-mode") ? true : undefined,
+    ssl: url.searchParams.has("ssl-mode") ? { rejectUnauthorized: false } : undefined,
+    connectTimeout: 30000,
+    socketTimeout: 60000,
+    acquireTimeout: 30000,
+    connectionLimit: 5,
     ...rest,
     prepareCacheLength: 0,
   };

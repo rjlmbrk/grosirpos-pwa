@@ -1,14 +1,14 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
-import { createProduct, updateProduct } from "@/actions/products";
+import { Plus, RefreshCw, Trash2 } from "lucide-react";
+import { createProduct, generateKodeBarang, updateProduct } from "@/actions/products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface UnitField {
   namaSatuan: string;
@@ -43,12 +43,24 @@ export function ProductForm({ initialData }: Props) {
 
   const [state, formAction] = useActionState(action, undefined);
   const router = useRouter();
+  const [kodeBarang, setKodeBarang] = useState(initialData?.kodeBarang || "");
   const [units, setUnits] = useState<UnitField[]>(
     initialData?.units.map((u) => ({
       namaSatuan: u.namaSatuan,
       hargaJual: String(u.hargaJual),
     })) || [{ namaSatuan: "", hargaJual: "" }],
   );
+
+  useEffect(() => {
+    if (!edit && !kodeBarang) {
+      generateKodeBarang().then(setKodeBarang);
+    }
+  }, [edit, kodeBarang]);
+
+  async function handleGenerate() {
+    const code = await generateKodeBarang();
+    if (code) setKodeBarang(code);
+  }
 
   function addUnit() {
     setUnits([...units, { namaSatuan: "", hargaJual: "" }]);
@@ -76,13 +88,28 @@ export function ProductForm({ initialData }: Props) {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="kodeBarang">Kode Barang</Label>
-              <Input
-                id="kodeBarang"
-                name="kodeBarang"
-                defaultValue={initialData?.kodeBarang}
-                placeholder="Masukkan kode barang"
-                required
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="kodeBarang"
+                  name="kodeBarang"
+                  value={kodeBarang}
+                  onChange={(e) => setKodeBarang(e.target.value)}
+                  placeholder="Masukkan kode barang"
+                  required
+                  className="flex-1"
+                />
+                {!edit && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleGenerate}
+                    title="Generate kode barang"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="kategori">Kategori</Label>

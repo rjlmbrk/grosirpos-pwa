@@ -4,7 +4,7 @@
   "description": "Point of Sale untuk toko grosir",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#fafafa",
+  "background_color": "#2563eb",
   "theme_color": "#2563eb",
   "orientation": "portrait-primary",
   "icons": [

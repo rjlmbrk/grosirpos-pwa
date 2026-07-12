@@ -24,7 +24,7 @@ model User {
 
 model Product {
   id         BigInt        @id @default(autoincrement())
-  kodeBarang String        @map("kode_barang") @db.VarChar(100)
+  kodeBarang String        @unique @map("kode_barang") @db.VarChar(100)
   namaBarang String        @map("nama_barang") @db.VarChar(150)
   kategori   String        @db.VarChar(100)
   isActive   Boolean        @default(true) @map("is_active")

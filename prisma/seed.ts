@@ -11,7 +11,7 @@ function createConfig(urlString: string) {
     user: decodeURIComponent(url.username),
     password: decodeURIComponent(url.password),
     database: url.pathname.replace(/^\//, "") || undefined,
-    ssl: url.searchParams.has("ssl-mode") ? true : undefined,
+    ssl: url.searchParams.has("ssl-mode") ? { rejectUnauthorized: false } : undefined,
     prepareCacheLength: 0,
     connectionLimit: 1,
   };

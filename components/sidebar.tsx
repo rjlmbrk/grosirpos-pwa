@@ -9,15 +9,15 @@ import {
   Receipt,
   BarChart3,
   Users,
-  LogOut,
   Store,
   Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { logout } from "@/actions/auth";
 import { useState } from "react";
+import { toast } from "sonner";
 import { InstallPrompt } from "@/components/install-prompt";
 import { useInstallPrompt } from "@/components/pwa-provider";
+import { LogoutButton } from "@/components/logout-button";
 
 interface NavItem {
   href: string;
@@ -74,15 +74,7 @@ export function Sidebar({ role }: SidebarProps) {
 
       <div className="px-3 py-4 border-t border-zinc-200 space-y-2">
         <InstallPrompt />
-        <form action={logout}>
-          <button
-            type="submit"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-600 hover:bg-red-50 hover:text-red-600 transition-colors w-full"
-          >
-            <LogOut className="h-5 w-5" />
-            Keluar
-          </button>
-        </form>
+        <LogoutButton />
       </div>
     </aside>
   );
@@ -117,35 +109,31 @@ export function MobileNav({ role }: MobileNavProps) {
           );
         })}
         <InstallPromptMobile />
-        <form action={logout} className="flex flex-col items-center">
-          <button
-            type="submit"
-            className="flex flex-col items-center gap-0.5 px-3 py-1.5 text-xs font-medium text-zinc-500 whitespace-nowrap transition-colors hover:text-red-600"
-          >
-            <LogOut className="h-5 w-5" />
-            Keluar
-          </button>
-        </form>
+        <LogoutButton variant="mobile" />
       </div>
     </nav>
   );
 }
 
 function InstallPromptMobile() {
-  const { deferredPrompt, showInstall } = useInstallPrompt();
+  const { deferredPrompt, isStandalone } = useInstallPrompt();
   const [installing, setInstalling] = useState(false);
 
-  if (!showInstall || !deferredPrompt) return null;
-
-  const prompt = deferredPrompt;
+  if (isStandalone) return null;
 
   async function handleInstall() {
-    setInstalling(true);
-    await prompt.prompt();
-    const { outcome } = await prompt.userChoice;
-    if (outcome === "accepted") {
-      setInstalling(false);
+    if (!deferredPrompt) {
+      toast.info("Install Aplikasi", {
+        description:
+          "Buka menu Chrome (⋮) → Install Aplikasi atau Add to Home Screen",
+        duration: 5000,
+      });
+      return;
     }
+
+    setInstalling(true);
+    await deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
     setInstalling(false);
   }
 

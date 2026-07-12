@@ -4,22 +4,27 @@ import { useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useInstallPrompt } from "@/components/pwa-provider";
+import { toast } from "sonner";
 
 export function InstallPrompt() {
-  const { deferredPrompt, showInstall } = useInstallPrompt();
+  const { deferredPrompt, isStandalone } = useInstallPrompt();
   const [installing, setInstalling] = useState(false);
 
-  if (!showInstall || !deferredPrompt) return null;
-
-  const prompt = deferredPrompt;
+  if (isStandalone) return null;
 
   async function handleInstall() {
-    setInstalling(true);
-    await prompt.prompt();
-    const { outcome } = await prompt.userChoice;
-    if (outcome === "accepted") {
-      setInstalling(false);
+    if (!deferredPrompt) {
+      toast.info("Install Aplikasi", {
+        description:
+          "Buka menu Chrome (⋮) → Install Aplikasi atau Add to Home Screen",
+        duration: 5000,
+      });
+      return;
     }
+
+    setInstalling(true);
+    await deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
     setInstalling(false);
   }
 

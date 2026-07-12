@@ -23,29 +23,31 @@ export default async function DashboardPage() {
         <DashboardStats />
       </Suspense>
 
-      <div className="space-y-3 mt-8">
-        <h2 className="text-lg font-semibold text-zinc-900">Aksi Cepat</h2>
-        <div className="flex flex-wrap gap-3">
-          <Link href="/cashier">
-            <Button className="gap-2">
-              <ShoppingCart className="h-4 w-4" />
-              Kasir
-            </Button>
-          </Link>
-          <Link href="/products">
-            <Button variant="outline" className="gap-2">
-              <Package className="h-4 w-4" />
-              Produk
-            </Button>
-          </Link>
-          <Link href="/reports">
-            <Button variant="outline" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Laporan
-            </Button>
-          </Link>
+      {session.role === "admin" && (
+        <div className="space-y-3 mt-8">
+          <h2 className="text-lg font-semibold text-zinc-900">Aksi Cepat</h2>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/cashier">
+              <Button className="gap-2">
+                <ShoppingCart className="h-4 w-4" />
+                Kasir
+              </Button>
+            </Link>
+            <Link href="/products">
+              <Button variant="outline" className="gap-2">
+                <Package className="h-4 w-4" />
+                Produk
+              </Button>
+            </Link>
+            <Link href="/reports">
+              <Button variant="outline" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Laporan
+              </Button>
+            </Link>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
