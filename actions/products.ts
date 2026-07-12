@@ -6,29 +6,46 @@ import { prisma } from "@/lib/prisma";
 import { productSchema } from "@/schemas";
 import { getSession } from "@/lib/auth";
 
+function incrementLetter(str: string): string {
+  let num = 0;
+  for (const char of str) {
+    num = num * 26 + (char.charCodeAt(0) - 64);
+  }
+  num++;
+  let result = "";
+  while (num > 0) {
+    num--;
+    result = String.fromCharCode((num % 26) + 65) + result;
+    num = Math.floor(num / 26);
+  }
+  return result;
+}
+
 export async function generateKodeBarang() {
   const session = await getSession();
   if (!session) return "";
 
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, "0");
-  const dd = String(today.getDate()).padStart(2, "0");
-  const prefix = `BRG-${yyyy}${mm}${dd}-`;
+  const lastProduct = await prisma.$queryRawUnsafe<{ kode_barang: string }[]>(
+    `SELECT kode_barang FROM products
+     WHERE kode_barang REGEXP '^[A-Z]+-[0-9]{2}$'
+     ORDER BY LENGTH(kode_barang) DESC, kode_barang DESC
+     LIMIT 1`,
+  );
 
-  const lastProduct = await prisma.product.findFirst({
-    where: { kodeBarang: { startsWith: prefix } },
-    orderBy: { kodeBarang: "desc" },
-    select: { kodeBarang: true },
-  });
+  if (!lastProduct || lastProduct.length === 0) return "A-01";
 
-  let next = 1;
-  if (lastProduct) {
-    const lastNumber = parseInt(lastProduct.kodeBarang.slice(-4), 10);
-    next = lastNumber + 1;
+  const match = lastProduct[0].kode_barang.match(/^([A-Z]+)-(\d{2})$/);
+  if (!match) return "A-01";
+
+  const letter = match[1];
+  const num = parseInt(match[2], 10);
+
+  if (num < 99) {
+    return `${letter}-${String(num + 1).padStart(2, "0")}`;
   }
 
-  return `${prefix}${String(next).padStart(4, "0")}`;
+  const nextLetter = incrementLetter(letter);
+  return `${nextLetter}-01`;
 }
 
 export async function getProducts(search?: string, page = 1) {
